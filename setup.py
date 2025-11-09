@@ -1,0 +1,57 @@
+from setuptools import setup, find_packages
+from pathlib import Path
+
+# Read README
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text(encoding='utf-8') if (this_directory / "README.md").exists() else ""
+
+setup(
+    name="ethnidata",
+    version="1.0.0",
+    author="Tefik Yavuz Oz",
+    author_email="teyfikoz@example.com",
+    description="Predict nationality, ethnicity, and demographics from names using a comprehensive global database",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/teyfikoz/ethnidata",
+    packages=find_packages(),
+    package_data={
+        'ethnidata': ['ethnidata.db'],
+    },
+    include_package_data=True,
+    install_requires=[
+        "pycountry>=22.3.5",
+        "unidecode>=1.3.6",
+    ],
+    extras_require={
+        'dev': [
+            'pytest>=7.0.0',
+            'pytest-cov>=4.0.0',
+        ],
+        'build': [
+            'requests>=2.31.0',
+            'pandas>=2.0.0',
+            'numpy>=1.24.0',
+            'beautifulsoup4>=4.12.0',
+            'lxml>=4.9.0',
+            'tqdm>=4.65.0',
+            'wikipedia-api>=0.6.0',
+            'sqlalchemy>=2.0.0',
+        ]
+    },
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+    ],
+    python_requires=">=3.8",
+    keywords="names nationality ethnicity demographics prediction NLP",
+)
