@@ -1,5 +1,9 @@
 """
-EthniData Predictor - Ana tahmin modülü
+EthniData Predictor v2.0 - Gelişmiş özelliklerle
+Yeni özellikler:
+- Gender prediction (Cinsiyet tahmini)
+- Region prediction (Bölge: Europe, Asia, Americas, Africa, Oceania)
+- Language prediction (Yaygın dil tahmini)
 """
 
 import sqlite3
@@ -9,7 +13,7 @@ from unidecode import unidecode
 import pycountry
 
 class EthniData:
-    """Ethnicity and Nationality Data predictor"""
+    """Ethnicity, Nationality, Gender, Region and Language predictor"""
 
     def __init__(self, db_path: Optional[str] = None):
         """
@@ -26,7 +30,7 @@ class EthniData:
         if not self.db_path.exists():
             raise FileNotFoundError(
                 f"Database not found: {self.db_path}\n"
-                f"Please run scripts/6_create_database.py first"
+                f"Please run scripts/9_create_database_enhanced.py first"
             )
 
         self.conn = sqlite3.connect(self.db_path)
@@ -54,14 +58,17 @@ class EthniData:
         Args:
             name: First or last name
             name_type: "first" or "last"
-            top_n: Number of top predictions to return
+            top_n: Number of top predictions
 
         Returns:
             {
-                'name': normalized name,
-                'country': top country code (ISO 3166-1 alpha-3),
-                'confidence': confidence score (0-1),
-                'top_countries': [{country, probability, frequency}, ...]
+                'name': str,
+                'country': str (ISO 3166-1 alpha-3),
+                'country_name': str,
+                'confidence': float (0-1),
+                'region': str,  # NEW
+                'language': str,  # NEW
+                'top_countries': [...]
             }
         """
 
@@ -69,9 +76,8 @@ class EthniData:
 
         table = "first_names" if name_type == "first" else "last_names"
 
-        # Query database
         query = f"""
-            SELECT country_code, frequency
+            SELECT country_code, region, language, frequency
             FROM {table}
             WHERE name = ?
             ORDER BY frequency DESC
@@ -80,25 +86,26 @@ class EthniData:
 
         cursor = self.conn.cursor()
         cursor.execute(query, (normalized, top_n))
-
         results = cursor.fetchall()
 
         if not results:
             return {
                 'name': normalized,
                 'country': None,
+                'country_name': None,
                 'confidence': 0.0,
+                'region': None,
+                'language': None,
                 'top_countries': []
             }
 
         # Calculate probabilities
-        total_frequency = sum(row['frequency'] for row in results)
+        total_freq = sum(row['frequency'] for row in results)
 
         top_countries = []
         for row in results:
-            prob = row['frequency'] / total_frequency
+            prob = row['frequency'] / total_freq
 
-            # Country name lookup
             try:
                 country = pycountry.countries.get(alpha_3=row['country_code'])
                 country_name = country.name if country else row['country_code']
@@ -108,11 +115,12 @@ class EthniData:
             top_countries.append({
                 'country': row['country_code'],
                 'country_name': country_name,
+                'region': row['region'],
+                'language': row['language'],
                 'probability': round(prob, 4),
                 'frequency': row['frequency']
             })
 
-        # Top prediction
         top = top_countries[0]
 
         return {
@@ -120,16 +128,82 @@ class EthniData:
             'country': top['country'],
             'country_name': top['country_name'],
             'confidence': top['probability'],
+            'region': top['region'],  # NEW
+            'language': top['language'],  # NEW
             'top_countries': top_countries
         }
 
-    def predict_ethnicity(
+    def predict_gender(
+        self,
+        name: str
+    ) -> Dict:
+        """
+        Predict gender from first name
+
+        Args:
+            name: First name
+
+        Returns:
+            {
+                'name': str,
+                'gender': str ('M' or 'F' or None),
+                'confidence': float,
+                'distribution': {'M': prob, 'F': prob, None: prob}
+            }
+        """
+
+        normalized = self.normalize_name(name)
+
+        query = """
+            SELECT gender, COUNT(*) as count
+            FROM first_names
+            WHERE name = ?
+            GROUP BY gender
+        """
+
+        cursor = self.conn.cursor()
+        cursor.execute(query, (normalized,))
+        results = cursor.fetchall()
+
+        if not results:
+            return {
+                'name': normalized,
+                'gender': None,
+                'confidence': 0.0,
+                'distribution': {}
+            }
+
+        # Count by gender
+        gender_counts = {}
+        total = 0
+
+        for row in results:
+            gender = row['gender']
+            count = row['count']
+            gender_counts[gender] = count
+            total += count
+
+        # Calculate probabilities
+        distribution = {g: round(c / total, 4) for g, c in gender_counts.items()}
+
+        # Top gender
+        top_gender = max(gender_counts.items(), key=lambda x: x[1])[0]
+        confidence = gender_counts[top_gender] / total
+
+        return {
+            'name': normalized,
+            'gender': top_gender,
+            'confidence': round(confidence, 4),
+            'distribution': distribution
+        }
+
+    def predict_region(
         self,
         name: str,
         name_type: Literal["first", "last"] = "first"
     ) -> Dict:
         """
-        Predict ethnicity from name
+        Predict geographic region from name
 
         Args:
             name: First or last name
@@ -137,10 +211,10 @@ class EthniData:
 
         Returns:
             {
-                'name': normalized name,
-                'ethnicity': predicted ethnicity,
-                'country': most likely country,
-                'confidence': confidence score
+                'name': str,
+                'region': str (Europe, Asia, Americas, Africa, Oceania, Other),
+                'confidence': float,
+                'distribution': {region: probability, ...}
             }
         """
 
@@ -148,9 +222,123 @@ class EthniData:
 
         table = "first_names" if name_type == "first" else "last_names"
 
-        # Query with ethnicity
         query = f"""
-            SELECT country_code, ethnicity, frequency
+            SELECT region, SUM(frequency) as total_freq
+            FROM {table}
+            WHERE name = ?
+            GROUP BY region
+            ORDER BY total_freq DESC
+        """
+
+        cursor = self.conn.cursor()
+        cursor.execute(query, (normalized,))
+        results = cursor.fetchall()
+
+        if not results:
+            return {
+                'name': normalized,
+                'region': None,
+                'confidence': 0.0,
+                'distribution': {}
+            }
+
+        total = sum(row['total_freq'] for row in results)
+
+        distribution = {}
+        for row in results:
+            region = row['region']
+            prob = row['total_freq'] / total
+            distribution[region] = round(prob, 4)
+
+        top_region = results[0]['region']
+        confidence = results[0]['total_freq'] / total
+
+        return {
+            'name': normalized,
+            'region': top_region,
+            'confidence': round(confidence, 4),
+            'distribution': distribution
+        }
+
+    def predict_language(
+        self,
+        name: str,
+        name_type: Literal["first", "last"] = "first",
+        top_n: int = 5
+    ) -> Dict:
+        """
+        Predict most likely language from name
+
+        Args:
+            name: First or last name
+            name_type: "first" or "last"
+            top_n: Number of top predictions
+
+        Returns:
+            {
+                'name': str,
+                'language': str,
+                'confidence': float,
+                'top_languages': [{language, probability}, ...]
+            }
+        """
+
+        normalized = self.normalize_name(name)
+
+        table = "first_names" if name_type == "first" else "last_names"
+
+        query = f"""
+            SELECT language, SUM(frequency) as total_freq
+            FROM {table}
+            WHERE name = ? AND language IS NOT NULL
+            GROUP BY language
+            ORDER BY total_freq DESC
+            LIMIT ?
+        """
+
+        cursor = self.conn.cursor()
+        cursor.execute(query, (normalized, top_n))
+        results = cursor.fetchall()
+
+        if not results:
+            return {
+                'name': normalized,
+                'language': None,
+                'confidence': 0.0,
+                'top_languages': []
+            }
+
+        total = sum(row['total_freq'] for row in results)
+
+        top_languages = []
+        for row in results:
+            lang = row['language']
+            prob = row['total_freq'] / total
+            top_languages.append({
+                'language': lang,
+                'probability': round(prob, 4)
+            })
+
+        return {
+            'name': normalized,
+            'language': top_languages[0]['language'],
+            'confidence': top_languages[0]['probability'],
+            'top_languages': top_languages
+        }
+
+    def predict_ethnicity(
+        self,
+        name: str,
+        name_type: Literal["first", "last"] = "first"
+    ) -> Dict:
+        """Predict ethnicity from name"""
+
+        normalized = self.normalize_name(name)
+
+        table = "first_names" if name_type == "first" else "last_names"
+
+        query = f"""
+            SELECT country_code, ethnicity, frequency, region, language
             FROM {table}
             WHERE name = ? AND ethnicity IS NOT NULL
             ORDER BY frequency DESC
@@ -163,7 +351,6 @@ class EthniData:
         result = cursor.fetchone()
 
         if result:
-            # Country name
             try:
                 country = pycountry.countries.get(alpha_3=result['country_code'])
                 country_name = country.name if country else result['country_code']
@@ -175,10 +362,12 @@ class EthniData:
                 'ethnicity': result['ethnicity'],
                 'country': result['country_code'],
                 'country_name': country_name,
+                'region': result['region'],
+                'language': result['language'],
                 'frequency': result['frequency']
             }
 
-        # Fallback to nationality prediction
+        # Fallback to nationality
         nationality = self.predict_nationality(name, name_type, top_n=1)
 
         return {
@@ -186,6 +375,8 @@ class EthniData:
             'ethnicity': None,
             'country': nationality['country'],
             'country_name': nationality.get('country_name'),
+            'region': nationality.get('region'),
+            'language': nationality.get('language'),
             'confidence': nationality['confidence']
         }
 
@@ -196,44 +387,44 @@ class EthniData:
         top_n: int = 5
     ) -> Dict:
         """
-        Predict nationality from full name (first + last)
+        Predict from full name (first + last) - ENHANCED
 
-        Combines predictions from both first and last names
-
-        Args:
-            first_name: First name
-            last_name: Last name
-            top_n: Number of top predictions
-
-        Returns:
-            Combined prediction with country probabilities
+        Returns nationality, region, language
         """
 
         first_pred = self.predict_nationality(first_name, "first", top_n=top_n)
         last_pred = self.predict_nationality(last_name, "last", top_n=top_n)
 
-        # Combine probabilities
+        # Combine scores
         combined_scores = {}
 
         for item in first_pred['top_countries']:
-            combined_scores[item['country']] = item['probability'] * 0.4
+            combined_scores[item['country']] = {
+                'score': item['probability'] * 0.4,
+                'region': item['region'],
+                'language': item['language']
+            }
 
         for item in last_pred['top_countries']:
             if item['country'] in combined_scores:
-                combined_scores[item['country']] += item['probability'] * 0.6
+                combined_scores[item['country']]['score'] += item['probability'] * 0.6
             else:
-                combined_scores[item['country']] = item['probability'] * 0.6
+                combined_scores[item['country']] = {
+                    'score': item['probability'] * 0.6,
+                    'region': item['region'],
+                    'language': item['language']
+                }
 
-        # Sort by combined score
+        # Sort
         sorted_countries = sorted(
             combined_scores.items(),
-            key=lambda x: x[1],
+            key=lambda x: x[1]['score'],
             reverse=True
         )[:top_n]
 
-        # Format results
+        # Format
         top_countries = []
-        for country_code, score in sorted_countries:
+        for country_code, data in sorted_countries:
             try:
                 country = pycountry.countries.get(alpha_3=country_code)
                 country_name = country.name if country else country_code
@@ -243,17 +434,62 @@ class EthniData:
             top_countries.append({
                 'country': country_code,
                 'country_name': country_name,
-                'probability': round(score, 4)
+                'region': data['region'],
+                'language': data['language'],
+                'probability': round(data['score'], 4)
             })
+
+        top = top_countries[0] if top_countries else {}
 
         return {
             'first_name': self.normalize_name(first_name),
             'last_name': self.normalize_name(last_name),
-            'country': top_countries[0]['country'] if top_countries else None,
-            'country_name': top_countries[0]['country_name'] if top_countries else None,
-            'confidence': top_countries[0]['probability'] if top_countries else 0.0,
+            'country': top.get('country'),
+            'country_name': top.get('country_name'),
+            'region': top.get('region'),  # NEW
+            'language': top.get('language'),  # NEW
+            'confidence': top.get('probability', 0.0),
             'top_countries': top_countries
         }
+
+    def predict_all(
+        self,
+        name: str,
+        name_type: Literal["first", "last"] = "first"
+    ) -> Dict:
+        """
+        Predict ALL attributes at once: nationality, gender, region, language, ethnicity
+
+        Args:
+            name: First or last name
+            name_type: "first" or "last"
+
+        Returns:
+            {
+                'name': str,
+                'nationality': {...},
+                'gender': {...},  # Only for first names
+                'region': {...},
+                'language': {...},
+                'ethnicity': {...}
+            }
+        """
+
+        normalized = self.normalize_name(name)
+
+        result = {
+            'name': normalized,
+            'nationality': self.predict_nationality(name, name_type),
+            'region': self.predict_region(name, name_type),
+            'language': self.predict_language(name, name_type),
+            'ethnicity': self.predict_ethnicity(name, name_type)
+        }
+
+        # Gender only for first names
+        if name_type == "first":
+            result['gender'] = self.predict_gender(name)
+
+        return result
 
     def get_stats(self) -> Dict:
         """Get database statistics"""
@@ -269,9 +505,12 @@ class EthniData:
         stats['total_last_names'] = cursor.fetchone()['count']
 
         cursor.execute("SELECT COUNT(DISTINCT country_code) as count FROM first_names")
-        stats['countries_first'] = cursor.fetchone()['count']
+        stats['countries'] = cursor.fetchone()['count']
 
-        cursor.execute("SELECT COUNT(DISTINCT country_code) as count FROM last_names")
-        stats['countries_last'] = cursor.fetchone()['count']
+        cursor.execute("SELECT COUNT(DISTINCT region) as count FROM first_names WHERE region IS NOT NULL")
+        stats['regions'] = cursor.fetchone()['count']
+
+        cursor.execute("SELECT COUNT(DISTINCT language) as count FROM first_names WHERE language IS NOT NULL")
+        stats['languages'] = cursor.fetchone()['count']
 
         return stats
