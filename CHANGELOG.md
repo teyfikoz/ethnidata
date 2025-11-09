@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.2.0] - 2025-11-09
+
+### Added
+- **Enhanced Database**: 310K+ unique names (119K first names, 190K last names)
+- **Expanded Coverage**: 172 countries, 4 major regions
+- **New Data Sources**:
+  - US Census Surnames: 50K surnames
+  - US Baby Names: 50K first names
+  - World Names DB: 50K global names
+  - Olympics Dataset: Optimized sampling
+  - Phone Directories: 274K names from multiple countries
+
+### Changed
+- **Unified Schema**: Single `names` table instead of separate first/last tables
+- **Better Performance**: Faster queries with improved indexing
+- **Improved Country Mapping**: Better region and language assignment
+- Database size: 21 MB (optimized)
+
+### Fixed
+- Country code normalization issues
+- Gender inference accuracy improved
+- Region mapping for 170+ countries
+
 ## [1.1.0] - 2024-11-09
 
 ### Added

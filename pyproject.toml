@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ethnidata"
-version = "1.1.0"
-description = "Predict nationality, ethnicity, and demographics from names using a comprehensive global database"
+version = "1.2.0"
+description = "Predict nationality, ethnicity, gender, region and language from names using 310K+ global name database"
 readme = "README.md"
 authors = [{name = "Tefik Yavuz Oz", email = "teyfikoz@example.com"}]
 license = {text = "MIT"}

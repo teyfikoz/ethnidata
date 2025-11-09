@@ -74,18 +74,17 @@ class EthniData:
 
         normalized = self.normalize_name(name)
 
-        table = "first_names" if name_type == "first" else "last_names"
-
-        query = f"""
-            SELECT country_code, region, language, frequency
-            FROM {table}
-            WHERE name = ?
+        query = """
+            SELECT country_code, region, language, COUNT(*) as frequency
+            FROM names
+            WHERE name = ? AND name_type = ?
+            GROUP BY country_code, region, language
             ORDER BY frequency DESC
             LIMIT ?
         """
 
         cursor = self.conn.cursor()
-        cursor.execute(query, (normalized, top_n))
+        cursor.execute(query, (normalized, name_type, top_n))
         results = cursor.fetchall()
 
         if not results:
@@ -156,8 +155,8 @@ class EthniData:
 
         query = """
             SELECT gender, COUNT(*) as count
-            FROM first_names
-            WHERE name = ?
+            FROM names
+            WHERE name = ? AND name_type = 'first'
             GROUP BY gender
         """
 
@@ -220,18 +219,16 @@ class EthniData:
 
         normalized = self.normalize_name(name)
 
-        table = "first_names" if name_type == "first" else "last_names"
-
-        query = f"""
-            SELECT region, SUM(frequency) as total_freq
-            FROM {table}
-            WHERE name = ?
+        query = """
+            SELECT region, COUNT(*) as total_freq
+            FROM names
+            WHERE name = ? AND name_type = ?
             GROUP BY region
             ORDER BY total_freq DESC
         """
 
         cursor = self.conn.cursor()
-        cursor.execute(query, (normalized,))
+        cursor.execute(query, (normalized, name_type))
         results = cursor.fetchall()
 
         if not results:
@@ -285,19 +282,17 @@ class EthniData:
 
         normalized = self.normalize_name(name)
 
-        table = "first_names" if name_type == "first" else "last_names"
-
-        query = f"""
-            SELECT language, SUM(frequency) as total_freq
-            FROM {table}
-            WHERE name = ? AND language IS NOT NULL
+        query = """
+            SELECT language, COUNT(*) as total_freq
+            FROM names
+            WHERE name = ? AND name_type = ? AND language IS NOT NULL
             GROUP BY language
             ORDER BY total_freq DESC
             LIMIT ?
         """
 
         cursor = self.conn.cursor()
-        cursor.execute(query, (normalized, top_n))
+        cursor.execute(query, (normalized, name_type, top_n))
         results = cursor.fetchall()
 
         if not results:
@@ -331,50 +326,16 @@ class EthniData:
         name: str,
         name_type: Literal["first", "last"] = "first"
     ) -> Dict:
-        """Predict ethnicity from name"""
+        """Predict ethnicity from name (uses nationality as proxy)"""
 
-        normalized = self.normalize_name(name)
-
-        table = "first_names" if name_type == "first" else "last_names"
-
-        query = f"""
-            SELECT country_code, ethnicity, frequency, region, language
-            FROM {table}
-            WHERE name = ? AND ethnicity IS NOT NULL
-            ORDER BY frequency DESC
-            LIMIT 1
-        """
-
-        cursor = self.conn.cursor()
-        cursor.execute(query, (normalized,))
-
-        result = cursor.fetchone()
-
-        if result:
-            try:
-                country = pycountry.countries.get(alpha_3=result['country_code'])
-                country_name = country.name if country else result['country_code']
-            except:
-                country_name = result['country_code']
-
-            return {
-                'name': normalized,
-                'ethnicity': result['ethnicity'],
-                'country': result['country_code'],
-                'country_name': country_name,
-                'region': result['region'],
-                'language': result['language'],
-                'frequency': result['frequency']
-            }
-
-        # Fallback to nationality
+        # Use nationality as ethnicity proxy since we don't have separate ethnicity data
         nationality = self.predict_nationality(name, name_type, top_n=1)
 
         return {
-            'name': normalized,
-            'ethnicity': None,
+            'name': nationality['name'],
+            'ethnicity': nationality['country_name'],  # Use country as ethnicity
             'country': nationality['country'],
-            'country_name': nationality.get('country_name'),
+            'country_name': nationality['country_name'],
             'region': nationality.get('region'),
             'language': nationality.get('language'),
             'confidence': nationality['confidence']
@@ -498,19 +459,19 @@ class EthniData:
 
         stats = {}
 
-        cursor.execute("SELECT COUNT(*) as count FROM first_names")
+        cursor.execute("SELECT COUNT(*) as count FROM names WHERE name_type = 'first'")
         stats['total_first_names'] = cursor.fetchone()['count']
 
-        cursor.execute("SELECT COUNT(*) as count FROM last_names")
+        cursor.execute("SELECT COUNT(*) as count FROM names WHERE name_type = 'last'")
         stats['total_last_names'] = cursor.fetchone()['count']
 
-        cursor.execute("SELECT COUNT(DISTINCT country_code) as count FROM first_names")
+        cursor.execute("SELECT COUNT(DISTINCT country_code) as count FROM names")
         stats['countries'] = cursor.fetchone()['count']
 
-        cursor.execute("SELECT COUNT(DISTINCT region) as count FROM first_names WHERE region IS NOT NULL")
+        cursor.execute("SELECT COUNT(DISTINCT region) as count FROM names WHERE region IS NOT NULL")
         stats['regions'] = cursor.fetchone()['count']
 
-        cursor.execute("SELECT COUNT(DISTINCT language) as count FROM first_names WHERE language IS NOT NULL")
+        cursor.execute("SELECT COUNT(DISTINCT language) as count FROM names WHERE language IS NOT NULL")
         stats['languages'] = cursor.fetchone()['count']
 
         return stats

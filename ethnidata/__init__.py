@@ -1,13 +1,20 @@
 """
-EthniData v1.1.0 - Ethnicity, Nationality, Gender, Region and Language Prediction
+EthniData v1.2.0 - Ethnicity, Nationality, Gender, Region and Language Prediction
 Predict demographics from names using a comprehensive global database
 
-New in v1.1.0:
-- Gender prediction (Cinsiyet tahmini)
-- Region prediction (Bölge: Europe, Asia, Americas, Africa, Oceania)
-- Language prediction (Yaygın dil tahmini)
-- predict_all() method - All predictions at once
-- Enhanced data: 600K+ names from multiple sources
+New in v1.2.0:
+- Enhanced database: 310K+ unique names (120K first names, 190K last names)
+- 172 countries, 4 regions (Americas, Europe, Asia, Oceania)
+- Unified database schema for faster queries
+- Improved data quality from Olympics, US Census, Phone Directories
+- Better country normalization
+
+Features:
+- Nationality prediction
+- Gender prediction
+- Region prediction (Europe, Asia, Americas, Africa, Oceania)
+- Language prediction
+- Full name analysis
 
 Usage:
     from ethnidata import EthniData
@@ -17,20 +24,20 @@ Usage:
     # Nationality
     result = ed.predict_nationality("Ahmet")
 
-    # Gender (NEW!)
+    # Gender
     result = ed.predict_gender("Emma")
 
-    # Region (NEW!)
+    # Region
     result = ed.predict_region("Chen")
 
-    # Language (NEW!)
+    # Language
     result = ed.predict_language("José")
 
-    # ALL at once (NEW!)
-    result = ed.predict_all("Maria")
+    # ALL at once
+    result = ed.predict_all("Maria", "Garcia")
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __author__ = "Tefik Yavuz Oz"
 __license__ = "MIT"
 
