@@ -66,3 +66,6 @@ docs/_build/
 
 # Environment variables
 .env
+*.log
+ethnidata_v3_full.db
+ethnidata/ethnidata_v3*.db

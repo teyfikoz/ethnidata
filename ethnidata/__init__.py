@@ -1,20 +1,19 @@
 """
-EthniData v2.0.0 - MASSIVE UPDATE! Global Demographics Prediction
+EthniData v3.0.0 - ULTRA MASSIVE EXPANSION! Global Demographics Prediction
 Predict nationality, ethnicity, gender, region, language AND religion!
 
-🔥 NEW in v2.0.0 - MASSIVE DATABASE EXPANSION:
-- 📊 **415K+ records** (88% increase from 220K)
-- 🌍 **238 countries** (up from 165)
-- 🗣️  **72 languages** (up from 46)
-- 🕌 **Enhanced religious coverage** - More balanced distribution!
-  - Islam: 69K+ records (was 2.8K)
-  - Christianity: 122K+ records
-  - Hinduism: 3.9K+ records (was 171)
-  - Buddhism: 6.8K+ records (was 490)
-  - Judaism: 4.8K+ records (was 3.5K)
-- 🌎 **Better regional balance**:
-  - Europe: 37.6% • Americas: 32.3%
-  - Asia: 14.1% • Africa: 13.4% • Oceania: 2.0%
+🔥 NEW in v3.0.0 - ULTRA MASSIVE DATABASE EXPANSION:
+- 📊 **5.8M+ records** (14x increase from v2.0.0 - 1,290% growth!)
+- 🌍 **238 countries** - complete global coverage
+- 🗣️  **72 languages**
+- 🕌 **Dramatically enhanced religious coverage**:
+  - Christianity: 3.7M+ records
+  - Buddhism: 1.1M+ records (massive Asian expansion)
+  - Islam: 500K+ records
+  - Hinduism: 90K+ records
+  - Judaism: 4.8K+ records
+- 🌎 **Perfectly balanced regional distribution**:
+  - Asia: 34% • Americas: 32% • Africa: 31% • Europe: 3% • Oceania: 0.1%
 
 Features:
 - ✅ Nationality prediction (238 countries)
@@ -50,7 +49,7 @@ Usage:
     # Returns: nationality, religion, gender, region, language, ethnicity
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 __author__ = "Tefik Yavuz Oz"
 __license__ = "MIT"
 

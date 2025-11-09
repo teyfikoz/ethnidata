@@ -15,22 +15,38 @@ import pycountry
 class EthniData:
     """Ethnicity, Nationality, Gender, Region and Language predictor"""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: Optional[str] = None, use_v3: bool = False):
         """
         Initialize EthniData predictor
 
         Args:
             db_path: Path to SQLite database. If None, uses default location.
+            use_v3: If True, attempts to use v3.0.0 database (5.8M records).
+                   If False, uses v2.0.0 database (415K records, included in package).
         """
         if db_path is None:
-            db_path = Path(__file__).parent / "ethnidata.db"
+            package_dir = Path(__file__).parent
+
+            if use_v3:
+                # Try to use v3 database
+                v3_path = package_dir / "ethnidata_v3.db"
+                if v3_path.exists():
+                    db_path = v3_path
+                else:
+                    print(f"\n💡 EthniData v3.0.0 (5.8M records) is not installed.")
+                    print(f"   To download: from ethnidata.downloader import download_v3_database")
+                    print(f"   download_v3_database()")
+                    print(f"\n   Using v2.0.0 (415K records) for now...")
+                    db_path = package_dir / "ethnidata.db"
+            else:
+                db_path = package_dir / "ethnidata.db"
 
         self.db_path = Path(db_path)
 
         if not self.db_path.exists():
             raise FileNotFoundError(
                 f"Database not found: {self.db_path}\n"
-                f"Please run scripts/9_create_database_enhanced.py first"
+                f"Please reinstall: pip install --upgrade --force-reinstall ethnidata"
             )
 
         self.conn = sqlite3.connect(self.db_path)
