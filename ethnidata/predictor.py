@@ -321,6 +321,70 @@ class EthniData:
             'top_languages': top_languages
         }
 
+    def predict_religion(
+        self,
+        name: str,
+        name_type: Literal["first", "last"] = "first",
+        top_n: int = 5
+    ) -> Dict:
+        """
+        Predict religion from name - NEW in v1.3.0!
+
+        Args:
+            name: First or last name
+            name_type: "first" or "last"
+            top_n: Number of top predictions
+
+        Returns:
+            {
+                'name': str,
+                'religion': str (Christianity, Islam, Hinduism, Buddhism, Judaism),
+                'confidence': float,
+                'top_religions': [{religion, probability}, ...]
+            }
+        """
+
+        normalized = self.normalize_name(name)
+
+        query = """
+            SELECT religion, COUNT(*) as total_freq
+            FROM names
+            WHERE name = ? AND name_type = ? AND religion IS NOT NULL
+            GROUP BY religion
+            ORDER BY total_freq DESC
+            LIMIT ?
+        """
+
+        cursor = self.conn.cursor()
+        cursor.execute(query, (normalized, name_type, top_n))
+        results = cursor.fetchall()
+
+        if not results:
+            return {
+                'name': normalized,
+                'religion': None,
+                'confidence': 0.0,
+                'top_religions': []
+            }
+
+        total = sum(row['total_freq'] for row in results)
+
+        top_religions = []
+        for row in results:
+            religion = row['religion']
+            prob = row['total_freq'] / total
+            top_religions.append({
+                'religion': religion,
+                'probability': round(prob, 4)
+            })
+
+        return {
+            'name': normalized,
+            'religion': top_religions[0]['religion'],
+            'confidence': top_religions[0]['probability'],
+            'top_religions': top_religions
+        }
+
     def predict_ethnicity(
         self,
         name: str,
@@ -419,7 +483,8 @@ class EthniData:
         name_type: Literal["first", "last"] = "first"
     ) -> Dict:
         """
-        Predict ALL attributes at once: nationality, gender, region, language, ethnicity
+        Predict ALL attributes at once - UPDATED v1.3.0
+        Now includes: nationality, gender, region, language, religion, ethnicity
 
         Args:
             name: First or last name
@@ -432,6 +497,7 @@ class EthniData:
                 'gender': {...},  # Only for first names
                 'region': {...},
                 'language': {...},
+                'religion': {...},  # NEW in v1.3.0!
                 'ethnicity': {...}
             }
         """
@@ -443,6 +509,7 @@ class EthniData:
             'nationality': self.predict_nationality(name, name_type),
             'region': self.predict_region(name, name_type),
             'language': self.predict_language(name, name_type),
+            'religion': self.predict_religion(name, name_type),  # NEW!
             'ethnicity': self.predict_ethnicity(name, name_type)
         }
 
