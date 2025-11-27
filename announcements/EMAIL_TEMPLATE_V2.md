@@ -385,7 +385,7 @@ def predict(name):
 
 **Teşekkürler ve mutlu kodlamalar!** 🚀
 
-**Tefik Yavuz Oz**
+**Teyfik Oz**
 Python Developer | Data Science Enthusiast
 📧 teyfikoz@example.com
 💻 https://github.com/teyfikoz

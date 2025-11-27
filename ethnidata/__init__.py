@@ -53,7 +53,7 @@ Usage:
 """
 
 __version__ = "3.0.1"
-__author__ = "Tefik Yavuz Oz"
+__author__ = "Teyfik Oz"
 __license__ = "MIT"
 
 from .predictor import EthniData

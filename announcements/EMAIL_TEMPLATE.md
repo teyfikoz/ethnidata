@@ -190,7 +190,7 @@ EthniData'yı beğendiyseniz:
 
 **Teşekkürler ve mutlu kodlamalar!** 🚀
 
-**Tefik Yavuz Oz**
+**Teyfik Oz**
 Python Developer | Data Science Enthusiast
 
 ---

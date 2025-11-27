@@ -219,7 +219,7 @@ EthniData tamamen **açık kaynaklı** (MIT Lisansı) ve **ücretsizdir**!
 
 *Bu proje, veri bilimi ve demografik analiz alanında çalışan herkese faydalı olmak amacıyla geliştirilmiştir. Geri bildirimlerinizi ve katkılarınızı bekliyorum!*
 
-**Tefik Yavuz Oz**
+**Teyfik Oz**
 Python Developer | Data Science Enthusiast
 📧 teyfikoz@example.com
 💻 https://github.com/teyfikoz

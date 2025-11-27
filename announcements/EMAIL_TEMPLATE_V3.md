@@ -192,7 +192,7 @@ Sorularınız varsa cevaplamaktan mutluluk duyarım!
 
 Saygılarımla,
 
-**Tefik Yavuz Oz**
+**Teyfik Oz**
 Python Developer | Data Science Enthusiast
 📧 teyfikoz@example.com
 💻 https://github.com/teyfikoz
