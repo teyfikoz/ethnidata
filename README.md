@@ -189,7 +189,7 @@ If you use this database in research, please cite:
 ```bibtex
 @software{ethnidata_2024,
   title = {EthniData: Ethnicity and Nationality Prediction from Names},
-  author = {Oz, Tefik Yavuz},
+  author = {Oz, Teyfik},
   year = {2024},
   url = {https://github.com/teyfikoz/ethnidata}
 }
