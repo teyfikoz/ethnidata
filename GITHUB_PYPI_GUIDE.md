@@ -258,7 +258,7 @@ result = ed.predict_nationality("Ahmet")
 print(result)
 
 # Tam isim
-result = ed.predict_full_name("Tefik", "Oz")
+result = ed.predict_full_name("Teyfik", "Oz")
 print(result['country'])
 ```
 

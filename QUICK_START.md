@@ -163,7 +163,7 @@ ed = EthniData()
 print(ed.predict_nationality("Ahmet"))
 
 # Tam isim
-print(ed.predict_full_name("Tefik", "Oz"))
+print(ed.predict_full_name("Teyfik", "Oz"))
 
 # Etnisite
 print(ed.predict_ethnicity("Muhammad"))
