@@ -52,7 +52,7 @@ Usage:
     # Returns: nationality, religion, gender, region, language, ethnicity
 """
 
-__version__ = "3.0.2"
+__version__ = "3.1.0"
 __author__ = "Teyfik Oz"
 __license__ = "MIT"
 

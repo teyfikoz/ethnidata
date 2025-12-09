@@ -1,5 +1,44 @@
 # Changelog
 
+## [3.1.0] - 2025-12-09
+
+### 🔧 BUG FIX RELEASE - Database Installation Fixed!
+
+This release fixes a critical bug where the database file was not being included in the pip package installation.
+
+### What Was Fixed
+- **✅ Fixed MANIFEST.in**: Corrected path from `nbd` to `ethnidata` for database inclusion
+- **✅ Fixed database packaging**: Database now properly included in pip installations
+- **✅ Version synchronization**: All version numbers now consistent across files
+- **✅ Installation reliability**: No more missing database errors after pip install
+
+### Technical Changes
+- Fixed `MANIFEST.in` to correctly include `ethnidata.db`
+- Updated version to 3.1.0 in both `pyproject.toml` and `__init__.py`
+- Verified `package_data` configuration in `pyproject.toml`
+
+### Before This Fix
+Users experienced:
+```
+FileNotFoundError: [Errno 2] No such file or directory:
+'/opt/anaconda3/lib/python3.12/site-packages/ethnidata/ethnidata.db'
+```
+
+### After This Fix
+Database is automatically included and works immediately after:
+```bash
+pip install ethnidata==3.1.0
+```
+
+### Upgrade Instructions
+```bash
+pip install --upgrade ethnidata
+```
+
+All existing v3.0.x code works without modifications!
+
+---
+
 ## [3.0.1] - 2025-11-10
 
 ### 🕌 COMPLETE RELIGIOUS COVERAGE - 6 Major World Religions!

@@ -3,8 +3,8 @@ include README.md
 include LICENSE
 include requirements.txt
 
-# Include database (if not too large)
-recursive-include nbd *.db
+# Include database
+recursive-include ethnidata *.db
 
 # Exclude unnecessary files
 global-exclude __pycache__
