@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ethnidata"
-version = "3.1.0"
+version = "3.1.1"
 description = "Predict nationality, ethnicity, gender, region, language and religion from names - 238 countries, 6 major religions, 5.9M+ names, complete religious coverage"
 readme = "README.md"
 authors = [{name = "Teyfik OZ", email = "teyfikoz@example.com"}]
