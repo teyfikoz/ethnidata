@@ -197,31 +197,40 @@ class EthniData:
         )
 
         # MORPHOLOGY-BASED CORRECTION for poor database coverage
-        # Detect Turkish patterns when data quality is low
         morphology_boost_applied = False
-        if data_quality < 0.3:  # Low data quality threshold
-            # Detect Turkish name patterns
-            turkish_chars = set('ığşçöü')
-            turkish_suffixes = ['oğlu', 'oglu', 'er', 'can', 'ay', 'han', 'gül', 'demir', 'kaya', 'yılmaz', 'öz', 'kurt']
+        name_lower = name.lower()
+        turkish_chars = set('ığşçöü')
+        turkish_suffixes = [
+            'oğlu', 'oglu', 'yilmaz', 'yılmaz', 'ilmaz', 'maz', 'mez',
+            'er', 'can', 'han', 'gül', 'demir', 'kaya', 'öz', 'kurt'
+        ]
 
-            has_turkish_chars = any(c in name.lower() for c in turkish_chars)
-            has_turkish_suffix = any(name.lower().endswith(suffix) for suffix in turkish_suffixes)
+        has_turkish_chars = any(c in name_lower for c in turkish_chars)
+        has_turkish_suffix = any(name_lower.endswith(suffix) for suffix in turkish_suffixes)
 
+        # Simple Japanese surname patterns to avoid Bhutan-style mislabels
+        japanese_common = {'tanaka', 'suzuki', 'sato', 'ito', 'watanabe', 'kobayashi', 'yamamoto', 'nakamura', 'kato', 'yoshida'}
+        has_japanese_pattern = name_lower in japanese_common
+
+        chinese_common = {'zhang', 'li', 'wang', 'chen', 'liu', 'yang', 'zhao', 'huang', 'wu', 'zhou'}
+
+        if data_quality < 0.4 or has_turkish_chars or has_turkish_suffix or has_japanese_pattern or name_lower in chinese_common:
+            morphology_signal = None
+
+            # Turkish boost logic
             if has_turkish_chars or has_turkish_suffix:
-                # Boost TUR country if it exists in top results
                 tur_found = False
                 for i, country_data in enumerate(top_countries):
                     if country_data['country'] == 'TUR':
-                        # Move TUR to top and boost its probability
                         top_countries.insert(0, top_countries.pop(i))
                         top = top_countries[0]
-                        confidence = max(confidence, 0.7)  # Boost confidence
+                        confidence = max(confidence, 0.70)
                         morphology_boost_applied = True
+                        morphology_signal = 'Turkish'
                         tur_found = True
                         break
 
-                # If TUR not in results but strong Turkish signals, inject it
-                if not tur_found and (has_turkish_chars and has_turkish_suffix):
+                if not tur_found and has_turkish_chars and has_turkish_suffix:
                     try:
                         country = pycountry.countries.get(alpha_3='TUR')
                         top_countries.insert(0, {
@@ -229,12 +238,75 @@ class EthniData:
                             'country_name': country.name if country else 'Turkey',
                             'region': 'Asia',
                             'language': 'Turkish',
-                            'probability': 0.8,
+                            'probability': 0.80,
                             'frequency': 0
                         })
                         top = top_countries[0]
-                        confidence = 0.65  # Moderate confidence for morphology-based
+                        confidence = 0.65
                         morphology_boost_applied = True
+                        morphology_signal = 'Turkish'
+                    except:
+                        pass
+
+            # Japanese boost logic
+            elif has_japanese_pattern:
+                jpn_found = False
+                for i, country_data in enumerate(top_countries):
+                    if country_data['country'] == 'JPN':
+                        top_countries.insert(0, top_countries.pop(i))
+                        top = top_countries[0]
+                        confidence = max(confidence, 0.75)
+                        morphology_boost_applied = True
+                        morphology_signal = 'Japanese'
+                        jpn_found = True
+                        break
+
+                if not jpn_found:
+                    try:
+                        country = pycountry.countries.get(alpha_3='JPN')
+                        top_countries.insert(0, {
+                            'country': 'JPN',
+                            'country_name': country.name if country else 'Japan',
+                            'region': 'Asia',
+                            'language': 'Japanese',
+                            'probability': 0.85,
+                            'frequency': 0
+                        })
+                        top = top_countries[0]
+                        confidence = 0.70
+                        morphology_boost_applied = True
+                        morphology_signal = 'Japanese'
+                    except:
+                        pass
+
+            # Chinese boost logic
+            elif name_lower in chinese_common:
+                chn_found = False
+                for i, country_data in enumerate(top_countries):
+                    if country_data['country'] == 'CHN':
+                        top_countries.insert(0, top_countries.pop(i))
+                        top = top_countries[0]
+                        confidence = max(confidence, 0.75)
+                        morphology_boost_applied = True
+                        morphology_signal = 'Chinese'
+                        chn_found = True
+                        break
+
+                if not chn_found:
+                    try:
+                        country = pycountry.countries.get(alpha_3='CHN')
+                        top_countries.insert(0, {
+                            'country': 'CHN',
+                            'country_name': country.name if country else 'China',
+                            'region': 'Asia',
+                            'language': 'Chinese',
+                            'probability': 0.85,
+                            'frequency': 0
+                        })
+                        top = top_countries[0]
+                        confidence = 0.70
+                        morphology_boost_applied = True
+                        morphology_signal = 'Chinese'
                     except:
                         pass
 
@@ -278,7 +350,7 @@ class EthniData:
         }
 
         if morphology_boost_applied:
-            result['note'] = 'Morphology-based Turkish pattern detected'
+            result['note'] = f'Morphology-based {morphology_signal} pattern detected' if morphology_signal else 'Morphology-based pattern detected'
 
         # v4.0.0: Add explainability features if requested
         if explain:

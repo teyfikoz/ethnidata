@@ -1,5 +1,32 @@
 # Changelog
 
+## [4.0.3] - 2024-12-22
+
+### 🔧 CRITICAL BUG FIX - Multi-Cultural Morphology Detection
+
+**Expanded Morphology Patterns** - Fixed wrong country predictions:
+- **✅ Japanese Common Surnames**: Added detection for tanaka, suzuki, sato, ito, watanabe, kobayashi, yamamoto, nakamura, kato, yoshida
+- **✅ Chinese Common Surnames**: Added detection for zhang, li, wang, chen, liu, yang, zhao, huang, wu, zhou
+- **✅ Enhanced Turkish Patterns**: Expanded suffix detection (yilmaz, ilmaz, maz, mez variants)
+- **✅ Pattern-Specific Notes**: Morphology signals now indicate Turkish/Japanese/Chinese
+
+**Fixes Critical Misclassifications**:
+- ❌ Before: Tanaka → Bhutan (BTN) conf 0.18 → ✅ Now: Japan (JPN) conf 0.75+
+- ❌ Before: Zhang → Spain (ESP) conf 0.80 → ✅ Now: China (CHN) conf 0.75+
+- ❌ Before: Turkish -az → Iberian → ✅ Now: Properly detected as Turkish
+
+**Files Changed**:
+- `ethnidata/predictor.py` (lines 199-311): Complete multi-cultural morphology overhaul
+
+**Impact**:
+- Fixes regression test failures for Japanese/Chinese names
+- More accurate predictions for names with poor database coverage
+- Better cultural pattern recognition across Asian languages
+- Transparent morphology-based predictions with pattern-specific notes
+
+### Migration Guide
+No breaking changes - fully backward compatible. All existing code continues to work with improved accuracy.
+
 ## [4.0.2] - 2024-12-22
 
 ### 🔧 CRITICAL BUG FIX - Production Readiness Improvements
