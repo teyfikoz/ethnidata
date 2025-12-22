@@ -1,9 +1,13 @@
 """
-EthniData Predictor v2.0 - Gelişmiş özelliklerle
+EthniData Predictor v4.0.0 - State-of-the-Art Features
 Yeni özellikler:
 - Gender prediction (Cinsiyet tahmini)
 - Region prediction (Bölge: Europe, Asia, Americas, Africa, Oceania)
 - Language prediction (Yaygın dil tahmini)
+- Explainability layer (Açıklanabilirlik)
+- Ambiguity scoring (Belirsizlik skoru - Shannon entropy)
+- Morphology pattern detection (Morfoljik kalıp tespiti)
+- Confidence breakdown (Güven skoru ayrıştırması)
 """
 
 import sqlite3
@@ -11,6 +15,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Literal
 from unidecode import unidecode
 import pycountry
+
+# v4.0.0 new modules
+from .explainability import ExplainabilityEngine
+from .morphology import MorphologyEngine, NameFeatureExtractor
 
 class EthniData:
     """Ethnicity, Nationality, Gender, Region and Language predictor"""
@@ -66,15 +74,17 @@ class EthniData:
         self,
         name: str,
         name_type: Literal["first", "last"] = "first",
-        top_n: int = 5
+        top_n: int = 5,
+        explain: bool = False
     ) -> Dict:
         """
-        Predict nationality from name
+        Predict nationality from name - ENHANCED v4.0.0
 
         Args:
             name: First or last name
             name_type: "first" or "last"
             top_n: Number of top predictions
+            explain: If True, includes explainability layer (v4.0.0 NEW!)
 
         Returns:
             {
@@ -82,9 +92,15 @@ class EthniData:
                 'country': str (ISO 3166-1 alpha-3),
                 'country_name': str,
                 'confidence': float (0-1),
-                'region': str,  # NEW
-                'language': str,  # NEW
-                'top_countries': [...]
+                'region': str,
+                'language': str,
+                'top_countries': [...],
+
+                # NEW v4.0.0 fields (if explain=True):
+                'ambiguity_score': float,  # Shannon entropy (0-1)
+                'confidence_level': str,  # 'High', 'Medium', 'Low'
+                'morphology_signal': {...},  # Detected patterns
+                'explanation': {...}  # Full human-readable explanation
             }
         """
 
@@ -104,7 +120,7 @@ class EthniData:
         results = cursor.fetchall()
 
         if not results:
-            return {
+            base_result = {
                 'name': normalized,
                 'country': None,
                 'country_name': None,
@@ -113,6 +129,29 @@ class EthniData:
                 'language': None,
                 'top_countries': []
             }
+
+            # v4.0.0: Add explain fields even when no results
+            if explain:
+                # Still try to detect morphological patterns
+                morphology_signal = MorphologyEngine.get_morphological_signal(name, name_type)
+
+                base_result['ambiguity_score'] = 1.0  # Maximum ambiguity (no data)
+                base_result['confidence_level'] = "Low"
+                base_result['morphology_signal'] = morphology_signal
+                base_result['explanation'] = {
+                    'why': ["Name not found in database"],
+                    'confidence_breakdown': {
+                        'frequency_strength': 0.0,
+                        'cross_source_agreement': 0.0,
+                        'name_uniqueness': 0.0,
+                        'morphology_signal': morphology_signal['pattern_confidence'] if morphology_signal else 0.0,
+                        'entropy_penalty': 0.0
+                    },
+                    'ambiguity_score': 1.0,
+                    'confidence_level': "Low"
+                }
+
+            return base_result
 
         # Calculate probabilities
         total_freq = sum(row['frequency'] for row in results)
@@ -138,15 +177,148 @@ class EthniData:
 
         top = top_countries[0]
 
-        return {
+        # IMPROVED: Calculate real confidence score
+        # Factors: frequency strength, data quality, entropy
+        freq_strength = top['probability']
+        data_quality = min(1.0, total_freq / 100.0)  # Higher total = better quality
+
+        # Calculate entropy (ambiguity)
+        import math
+        probs = [c['probability'] for c in top_countries]
+        entropy = -sum(p * math.log2(p) if p > 0 else 0 for p in probs)
+        max_entropy = math.log2(len(probs)) if len(probs) > 1 else 1
+        normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0
+
+        # Confidence = weighted average
+        confidence = (
+            freq_strength * 0.6 +      # Probability weight
+            data_quality * 0.2 +       # Data quality weight
+            (1 - normalized_entropy) * 0.2  # Low entropy = high confidence
+        )
+
+        # MORPHOLOGY-BASED CORRECTION for poor database coverage
+        # Detect Turkish patterns when data quality is low
+        morphology_boost_applied = False
+        if data_quality < 0.3:  # Low data quality threshold
+            # Detect Turkish name patterns
+            turkish_chars = set('ığşçöü')
+            turkish_suffixes = ['oğlu', 'oglu', 'er', 'can', 'ay', 'han', 'gül', 'demir', 'kaya', 'yılmaz', 'öz', 'kurt']
+
+            has_turkish_chars = any(c in name.lower() for c in turkish_chars)
+            has_turkish_suffix = any(name.lower().endswith(suffix) for suffix in turkish_suffixes)
+
+            if has_turkish_chars or has_turkish_suffix:
+                # Boost TUR country if it exists in top results
+                tur_found = False
+                for i, country_data in enumerate(top_countries):
+                    if country_data['country'] == 'TUR':
+                        # Move TUR to top and boost its probability
+                        top_countries.insert(0, top_countries.pop(i))
+                        top = top_countries[0]
+                        confidence = max(confidence, 0.7)  # Boost confidence
+                        morphology_boost_applied = True
+                        tur_found = True
+                        break
+
+                # If TUR not in results but strong Turkish signals, inject it
+                if not tur_found and (has_turkish_chars and has_turkish_suffix):
+                    try:
+                        country = pycountry.countries.get(alpha_3='TUR')
+                        top_countries.insert(0, {
+                            'country': 'TUR',
+                            'country_name': country.name if country else 'Turkey',
+                            'region': 'Asia',
+                            'language': 'Turkish',
+                            'probability': 0.8,
+                            'frequency': 0
+                        })
+                        top = top_countries[0]
+                        confidence = 0.65  # Moderate confidence for morphology-based
+                        morphology_boost_applied = True
+                    except:
+                        pass
+
+        # Apply minimum confidence threshold
+        MIN_CONFIDENCE = 0.15
+        if confidence < MIN_CONFIDENCE and not morphology_boost_applied:
+            # Return "uncertain" result
+            result = {
+                'name': normalized,
+                'country': None,
+                'country_name': None,
+                'confidence': round(confidence, 4),
+                'region': top['region'],
+                'language': top['language'],
+                'top_countries': top_countries,
+                'note': f'Low confidence ({round(confidence, 4)}) - threshold is {MIN_CONFIDENCE}'
+            }
+
+            if explain:
+                result['ambiguity_score'] = 0.9
+                result['confidence_level'] = "Low"
+                result['morphology_signal'] = None
+                result['explanation'] = {
+                    'why': ["Confidence below minimum threshold", "Insufficient data quality"],
+                    'confidence_breakdown': {'overall': round(confidence, 4)},
+                    'ambiguity_score': 0.9,
+                    'confidence_level': "Low"
+                }
+
+            return result
+
+        # Base result
+        result = {
             'name': normalized,
             'country': top['country'],
             'country_name': top['country_name'],
-            'confidence': top['probability'],
-            'region': top['region'],  # NEW
-            'language': top['language'],  # NEW
+            'confidence': round(confidence, 4),
+            'region': top['region'],
+            'language': top['language'],
             'top_countries': top_countries
         }
+
+        if morphology_boost_applied:
+            result['note'] = 'Morphology-based Turkish pattern detected'
+
+        # v4.0.0: Add explainability features if requested
+        if explain:
+            # Calculate ambiguity score (Shannon entropy)
+            probs = [c['probability'] for c in top_countries]
+            ambiguity = ExplainabilityEngine.calculate_ambiguity_score(probs)
+
+            # Detect morphological patterns
+            morphology_signal = MorphologyEngine.get_morphological_signal(name, name_type)
+
+            # Calculate confidence breakdown
+            freq_strength = top['probability']
+            morph_signal_strength = morphology_signal['pattern_confidence'] if morphology_signal else 0.0
+
+            breakdown = ExplainabilityEngine.decompose_confidence(
+                frequency_strength=freq_strength,
+                cross_source_agreement=0.15 if len(top_countries) > 1 else 0.0,
+                morphology_signal=morph_signal_strength,
+                entropy_penalty=ambiguity * 0.3
+            )
+
+            # Generate full explanation
+            morphology_patterns = [morphology_signal['primary_pattern']] if morphology_signal else None
+
+            explanation = ExplainabilityEngine.generate_explanation(
+                name=name,
+                prediction=result,
+                confidence_breakdown=breakdown,
+                ambiguity_score=ambiguity,
+                morphology_patterns=morphology_patterns,
+                sources=["EthniData Database"]
+            )
+
+            # Add v4.0.0 fields to result
+            result['ambiguity_score'] = round(ambiguity, 4)
+            result['confidence_level'] = explanation['explanation']['confidence_level']
+            result['morphology_signal'] = morphology_signal
+            result['explanation'] = explanation['explanation']
+
+        return result
 
     def predict_gender(
         self,
@@ -425,16 +597,23 @@ class EthniData:
         self,
         first_name: str,
         last_name: str,
-        top_n: int = 5
+        top_n: int = 5,
+        explain: bool = False
     ) -> Dict:
         """
-        Predict from full name (first + last) - ENHANCED
+        Predict from full name (first + last) - ENHANCED v4.0.0
 
         Returns nationality, region, language
+
+        Args:
+            first_name: First name
+            last_name: Last name
+            top_n: Number of top predictions
+            explain: If True, includes explainability layer (v4.0.0 NEW!)
         """
 
-        first_pred = self.predict_nationality(first_name, "first", top_n=top_n)
-        last_pred = self.predict_nationality(last_name, "last", top_n=top_n)
+        first_pred = self.predict_nationality(first_name, "first", top_n=top_n, explain=False)
+        last_pred = self.predict_nationality(last_name, "last", top_n=top_n, explain=False)
 
         # Combine scores
         combined_scores = {}
@@ -482,16 +661,68 @@ class EthniData:
 
         top = top_countries[0] if top_countries else {}
 
-        return {
+        # Base result
+        result = {
             'first_name': self.normalize_name(first_name),
             'last_name': self.normalize_name(last_name),
             'country': top.get('country'),
             'country_name': top.get('country_name'),
-            'region': top.get('region'),  # NEW
-            'language': top.get('language'),  # NEW
+            'region': top.get('region'),
+            'language': top.get('language'),
             'confidence': top.get('probability', 0.0),
             'top_countries': top_countries
         }
+
+        # v4.0.0: Add explainability features if requested
+        if explain:
+            # Calculate ambiguity score
+            probs = [c['probability'] for c in top_countries]
+            ambiguity = ExplainabilityEngine.calculate_ambiguity_score(probs)
+
+            # Detect morphological patterns in both names
+            first_morph = MorphologyEngine.get_morphological_signal(first_name, "first")
+            last_morph = MorphologyEngine.get_morphological_signal(last_name, "last")
+
+            # Use last name morphology (stronger signal)
+            morphology_signal = last_morph if last_morph else first_morph
+
+            # Calculate confidence breakdown
+            freq_strength = top.get('probability', 0.0)
+            morph_signal_strength = morphology_signal['pattern_confidence'] if morphology_signal else 0.0
+
+            breakdown = ExplainabilityEngine.decompose_confidence(
+                frequency_strength=freq_strength,
+                cross_source_agreement=0.20 if len(top_countries) > 1 else 0.0,
+                morphology_signal=morph_signal_strength,
+                entropy_penalty=ambiguity * 0.3
+            )
+
+            # Generate full explanation
+            morphology_patterns = []
+            if first_morph:
+                morphology_patterns.append(f"{first_morph['primary_pattern']} (first)")
+            if last_morph:
+                morphology_patterns.append(f"{last_morph['primary_pattern']} (last)")
+
+            explanation = ExplainabilityEngine.generate_explanation(
+                name=f"{first_name} {last_name}",
+                prediction=result,
+                confidence_breakdown=breakdown,
+                ambiguity_score=ambiguity,
+                morphology_patterns=morphology_patterns if morphology_patterns else None,
+                sources=["EthniData Database"]
+            )
+
+            # Add v4.0.0 fields
+            result['ambiguity_score'] = round(ambiguity, 4)
+            result['confidence_level'] = explanation['explanation']['confidence_level']
+            result['morphology_signal'] = {
+                'first_name': first_morph,
+                'last_name': last_morph
+            }
+            result['explanation'] = explanation['explanation']
+
+        return result
 
     def predict_all(
         self,

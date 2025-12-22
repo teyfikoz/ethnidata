@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ethnidata"
-version = "3.1.4"
-description = "Predict nationality, ethnicity, gender, region, language and religion from names - 238 countries, 6 major religions, 5.9M+ names, complete religious coverage"
+version = "4.0.2"
+description = "Production-Grade Explainable Name Analysis: nationality, ethnicity, gender, religion prediction with morphology detection, Shannon entropy ambiguity scoring, confidence breakdown - 238 countries, 6 religions, 5.9M+ names, 100% offline!"
 readme = "README.md"
 authors = [{name = "Teyfik OZ", email = "teyfikoz@example.com"}]
 license = {text = "MIT"}
@@ -15,14 +15,17 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-keywords = ["names", "nationality", "ethnicity", "demographics", "prediction", "NLP"]
+keywords = ["names", "nationality", "ethnicity", "demographics", "prediction", "NLP", "explainable-ai", "morphology", "cultural-patterns", "transparency", "religion", "gender"]
 dependencies = [
     "pycountry>=22.3.5",
     "unidecode>=1.3.6",

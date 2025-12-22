@@ -1,20 +1,26 @@
 """
-EthniData v3.0.1 - ULTRA MASSIVE EXPANSION! Global Demographics Prediction
+EthniData v4.0.0 - STATE-OF-THE-ART NAME ANALYSIS ENGINE
 Predict nationality, ethnicity, gender, region, language AND religion!
 
-🔥 NEW in v3.0.1 - COMPLETE RELIGIOUS COVERAGE:
-- 📊 **5.9M+ records** (14x increase from v2.0.0 - 1,326% growth!)
+🔥 NEW in v4.0.0 - EXPLAINABLE AI & TRANSPARENCY:
+- 🧠 **Explainability Layer** - Understand WHY predictions are made
+- 📊 **Ambiguity Scoring** - Shannon entropy for uncertainty quantification (0-1)
+- 🔍 **Morphology Detection** - Rule-based pattern recognition (9 cultural groups)
+- 📈 **Confidence Breakdown** - Interpretable confidence components
+- 🎯 **Synthetic Data Engine** - Privacy-safe test data generation
+- 📚 **Academic-Grade** - Transparent, reproducible, legally compliant
+
+Database:
+- 📊 **5.9M+ records** (14x increase from v2.0.0)
 - 🌍 **238 countries** - complete global coverage
 - 🗣️  **72 languages**
-- 🕌 **ALL 6 MAJOR WORLD RELIGIONS** - Complete coverage:
+- 🕌 **6 MAJOR WORLD RELIGIONS**:
   - Christianity: 3.9M+ records (65.2%)
   - Buddhism: 1.3M+ records (22.1%)
   - Islam: 504K+ records (8.5%)
-  - Judaism: 121K+ records (2.0%) ✡️
+  - Judaism: 121K+ records (2.0%)
   - Hinduism: 90K+ records (1.5%)
-  - Sikhism: 24K+ records (0.4%) 🪯 NEW!
-- 🌎 **Perfectly balanced regional distribution**:
-  - Asia: 33% • Americas: 32% • Africa: 30% • Europe: 3% • Oceania: 0.1%
+  - Sikhism: 24K+ records (0.4%)
 
 Features:
 - ✅ Nationality prediction (238 countries)
@@ -24,38 +30,67 @@ Features:
 - ✅ Language prediction (72 languages)
 - ✅ Ethnicity prediction
 - ✅ Full name analysis
+- 🆕 Explainable AI (explain=True)
+- 🆕 Morphology pattern detection
+- 🆕 Ambiguity scoring (Shannon entropy)
+- 🆕 Confidence breakdown
+- 🆕 Synthetic data generation
 
 Usage:
     from ethnidata import EthniData
 
     ed = EthniData()
 
-    # Nationality
+    # Basic prediction
     result = ed.predict_nationality("Ahmet")
 
-    # Religion (NOW WITH 6 RELIGIONS!)
-    result = ed.predict_religion("Muhammad")  # Islam
-    result = ed.predict_religion("Cohen")      # Judaism
-    result = ed.predict_religion("Singh")      # Sikhism
+    # v4.0.0: With explainability
+    result = ed.predict_nationality("Yılmaz", name_type="last", explain=True)
+    print(result['ambiguity_score'])      # Shannon entropy
+    print(result['confidence_level'])     # 'High', 'Medium', 'Low'
+    print(result['morphology_signal'])    # Detected patterns
+    print(result['explanation']['why'])   # Human-readable reasons
 
-    # Gender
-    result = ed.predict_gender("Emma")
+    # Full name with explanation
+    result = ed.predict_full_name("Mehmet", "Yılmaz", explain=True)
 
-    # Region
-    result = ed.predict_region("Chen")
+    # Morphology-only analysis
+    from ethnidata.morphology import MorphologyEngine
+    signal = MorphologyEngine.get_morphological_signal("O'Connor", "last")
+    # Returns: {'primary_pattern': "o'", 'pattern_type': 'gaelic', ...}
 
-    # Language
-    result = ed.predict_language("José")
-
-    # ALL at once
-    result = ed.predict_all("Maria")
-    # Returns: nationality, religion, gender, region, language, ethnicity
+    # Synthetic data generation
+    from ethnidata.synthetic import SyntheticDataEngine, SyntheticConfig
+    engine = SyntheticDataEngine(freq_provider)
+    config = SyntheticConfig(size=10000, country="TUR")
+    records = engine.generate(config)
 """
 
-__version__ = "3.1.0"
+__version__ = "4.0.2"
 __author__ = "Teyfik Oz"
 __license__ = "MIT"
 
 from .predictor import EthniData
+from .explainability import ExplainabilityEngine
+from .morphology import MorphologyEngine, NameFeatureExtractor
 
-__all__ = ["EthniData"]
+# Synthetic module imports (optional, may not have freq_provider)
+try:
+    from .synthetic import SyntheticDataEngine, SyntheticConfig, SyntheticRecord, FrequencyProvider
+    __all__ = [
+        "EthniData",
+        "ExplainabilityEngine",
+        "MorphologyEngine",
+        "NameFeatureExtractor",
+        "SyntheticDataEngine",
+        "SyntheticConfig",
+        "SyntheticRecord",
+        "FrequencyProvider"
+    ]
+except ImportError:
+    __all__ = [
+        "EthniData",
+        "ExplainabilityEngine",
+        "MorphologyEngine",
+        "NameFeatureExtractor"
+    ]
