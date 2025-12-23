@@ -28,10 +28,12 @@ class MorphologyEngine:
 
         # Turkic patterns
         "turkic": {
-            "suffixes": ["-oğlu", "-oglu", "-soy", "-gil", "-başı", "-can", "-han", "-bey"],
+            "suffixes": ["-oğlu", "-oglu", "-soy", "-gil", "-başı", "-can", "-han", "-bey", "-yilmaz", "-yılmaz", "-demir", "-kaya", "-arslan"],
             "prefixes": [],
             "regions": ["Anatolia", "Balkans", "Central Asia"],
-            "countries": ["TUR", "AZE", "KAZ", "UZB", "TKM"]
+            "countries": ["TUR", "AZE", "KAZ", "UZB", "TKM"],
+            "common_surnames": ["yilmaz", "yılmaz", "demir", "kaya", "arslan", "celik", "çelik", "sahin", "şahin", "yildiz", "yıldız"],
+            "turkish_chars": set("ığşçöü")
         },
 
         # Nordic patterns
@@ -80,7 +82,10 @@ class MorphologyEngine:
             "prefixes": [],  # East Asian names typically don't have affixes
             "regions": ["East Asia"],
             "countries": ["CHN", "JPN", "KOR", "TWN"],
-            "note": "East Asian names follow different morphological rules"
+            "note": "East Asian names follow different morphological rules",
+            "japanese_common": {"tanaka", "suzuki", "sato", "ito", "watanabe", "yamamoto", "nakamura", "kobayashi", "kato", "yoshida"},
+            "chinese_common": {"zhang", "wang", "li", "chen", "liu", "yang", "huang", "zhao", "wu", "zhou"},
+            "korean_common": {"kim", "lee", "park", "choi", "jung", "kang", "cho", "yoon", "jang", "lim"}
         },
 
         # South Asian patterns
@@ -109,8 +114,63 @@ class MorphologyEngine:
             List of detected patterns with confidence scores
         """
         normalized = cls.normalize_for_pattern(name)
+        name_lower = name.lower()
         detected = []
 
+        # PRIORITY CHECK: Turkish character/surname detection (override Iberian -az)
+        turkic_data = cls.PATTERNS.get("turkic", {})
+        turkish_chars = turkic_data.get("turkish_chars", set())
+        common_turkish = turkic_data.get("common_surnames", [])
+
+        if any(c in name_lower for c in turkish_chars) or name_lower in common_turkish:
+            detected.append({
+                "pattern_type": "turkic",
+                "pattern": "Turkish characters/surname",
+                "match_type": "character_set",
+                "regions": turkic_data.get("regions", []),
+                "likely_countries": ["TUR"],
+                "confidence": 0.95  # Very high confidence for Turkish chars
+            })
+            return detected  # Return immediately, Turkish takes priority
+
+        # PRIORITY CHECK: East Asian common surnames
+        east_asian_data = cls.PATTERNS.get("east_asian", {})
+        jpn_common = east_asian_data.get("japanese_common", set())
+        chn_common = east_asian_data.get("chinese_common", set())
+        kor_common = east_asian_data.get("korean_common", set())
+
+        if name_lower in jpn_common:
+            detected.append({
+                "pattern_type": "east_asian",
+                "pattern": "Japanese common surname",
+                "match_type": "common_surname",
+                "regions": ["East Asia", "Japan"],
+                "likely_countries": ["JPN"],
+                "confidence": 0.9
+            })
+            return detected
+        elif name_lower in chn_common:
+            detected.append({
+                "pattern_type": "east_asian",
+                "pattern": "Chinese common surname",
+                "match_type": "common_surname",
+                "regions": ["East Asia", "China"],
+                "likely_countries": ["CHN"],
+                "confidence": 0.9
+            })
+            return detected
+        elif name_lower in kor_common:
+            detected.append({
+                "pattern_type": "east_asian",
+                "pattern": "Korean common surname",
+                "match_type": "common_surname",
+                "regions": ["East Asia", "Korea"],
+                "likely_countries": ["KOR"],
+                "confidence": 0.9
+            })
+            return detected
+
+        # Standard pattern detection (suffixes/prefixes)
         for pattern_type, pattern_data in cls.PATTERNS.items():
             # Check suffixes
             for suffix in pattern_data.get("suffixes", []):
