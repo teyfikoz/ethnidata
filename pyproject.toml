@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ethnidata"
-version = "4.1.1"
+version = "4.4.0"
 description = "Production-Grade Explainable Name Analysis: nationality, ethnicity, gender, religion prediction with morphology detection, Shannon entropy ambiguity scoring, confidence breakdown - 238 countries, 6 religions, 5.9M+ names, 100% offline!"
 readme = "README.md"
-authors = [{name = "Teyfik OZ", email = "teyfikoz@example.com"}]
+authors = [{name = "Teyfik OZ", email = "teyfikoz@yahoo.com"}]
 license = {text = "MIT"}
 requires-python = ">=3.8"
 classifiers = [
@@ -58,4 +58,4 @@ where = ["."]
 include = ["ethnidata*"]
 
 [tool.setuptools.package-data]
-ethnidata = ["*.db"]
+ethnidata = ["*.db", "py.typed"]

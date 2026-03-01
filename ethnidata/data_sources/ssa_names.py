@@ -9,7 +9,6 @@ Format: CSV files by year with columns: name, sex, count
 """
 
 import os
-import csv
 import zipfile
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
@@ -67,7 +66,7 @@ class SSABabyNamesLoader:
             print(f"✅ Using cached SSA data: {zip_path}")
             return zip_path
 
-        print(f"📥 Downloading SSA national baby names data...")
+        print("📥 Downloading SSA national baby names data...")
         print(f"   Source: {self.NATIONAL_URL}")
 
         try:

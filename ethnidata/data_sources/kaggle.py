@@ -11,11 +11,8 @@ Popular Kaggle datasets for names:
 """
 
 import csv
-import os
-import json
 from typing import Dict, List, Optional
 from dataclasses import dataclass
-from urllib.request import urlretrieve
 import tempfile
 
 
@@ -209,15 +206,15 @@ class KaggleNamesIntegration:
     def load_indian_names_mock(self) -> List[KaggleNameRecord]:
         """Mock Indian names dataset."""
         mock_data = [
-            ("Sharma", "last", "IN"),
+            ("Sharma", "last", "IN", None),
             ("Kumar", "first", "IN", "M"),
-            ("Patel", "last", "IN"),
+            ("Patel", "last", "IN", None),
             ("Priya", "first", "IN", "F"),
         ]
 
         return [
-            KaggleNameRecord(name=n, name_type=t, country=c, gender=g if len(args := [n, t, c, g]) == 4 else None)
-            for *args in mock_data
+            KaggleNameRecord(name=n, name_type=t, country=c, gender=g)
+            for n, t, c, g in mock_data
         ]
 
     def aggregate_frequencies(

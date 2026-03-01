@@ -13,7 +13,7 @@ Note: Religion is only a weak signal for ethnicity/nationality.
 Use with caution and combine with other features.
 """
 
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
@@ -183,20 +183,21 @@ class ReligiousNamesDatabase:
         Returns:
             Religion enum or None
         """
-        name_lower = name.lower()
+        # Title-case for dictionary lookup (keys are stored as "Muhammad", "Mary", etc.)
+        name_title = name.strip().title()
 
         # Check each religion's database
-        if name in self.islamic_names:
+        if name_title in self.islamic_names:
             return Religion.ISLAM
-        if name in self.christian_names:
+        if name_title in self.christian_names:
             return Religion.CHRISTIANITY
-        if name in self.jewish_names:
+        if name_title in self.jewish_names:
             return Religion.JUDAISM
-        if name in self.hindu_names:
+        if name_title in self.hindu_names:
             return Religion.HINDUISM
-        if name in self.buddhist_names:
+        if name_title in self.buddhist_names:
             return Religion.BUDDHISM
-        if name in self.sikh_names:
+        if name_title in self.sikh_names:
             return Religion.SIKHISM
 
         return None
@@ -281,7 +282,7 @@ if __name__ == "__main__":
 
     # Infer religion
     test_names = ["Muhammad", "Mary", "David", "Krishna", "Buddha"]
-    print(f"\n🔍 Religion Inference:")
+    print("\n🔍 Religion Inference:")
     for name in test_names:
         religion = db.infer_religion(name)
         print(f"   {name}: {religion.value if religion else 'Unknown'}")

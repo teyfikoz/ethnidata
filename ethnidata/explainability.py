@@ -149,7 +149,7 @@ class ExplainabilityEngine:
         elif freq_strength > 0.3:
             why.append(f"Moderate presence in {top_country} records")
         else:
-            why.append(f"Limited data available for this name")
+            why.append("Limited data available for this name")
 
         # Cross-source agreement
         cross_source = confidence_breakdown.get('cross_source_agreement', 0.0)

@@ -1,0 +1,15 @@
+tests/
+scripts/
+examples/
+docs/
+.git/
+.github/
+__pycache__/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.pyc
+.env

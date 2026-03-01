@@ -3,9 +3,7 @@ Database downloader for EthniData
 Downloads the full v3.0.0 database (5.8M records) on first use
 """
 
-import os
 import urllib.request
-import shutil
 from pathlib import Path
 from typing import Optional
 
@@ -69,7 +67,7 @@ class DatabaseDownloader:
         print(f"\n📥 Downloading EthniData {version} database...")
         print(f"   Records: {db_info['records']}")
         print(f"   Size: {db_info['size']}")
-        print(f"   This may take a few minutes...")
+        print("   This may take a few minutes...")
 
         try:
             # Download with progress
@@ -88,7 +86,7 @@ class DatabaseDownloader:
 
         except Exception as e:
             print(f"\n❌ Download failed: {e}")
-            print(f"\n💡 You can manually download from:")
+            print("\n💡 You can manually download from:")
             print(f"   {db_info['url']}")
             print(f"   And save it as: {target_path}")
             raise
@@ -106,7 +104,7 @@ class DatabaseDownloader:
         if prefer_v3:
             # Try to use v3, download if not exists
             if not self.v3_path.exists():
-                print(f"\n🚀 EthniData v3.0.0 offers 14x more data (5.8M vs 415K records)!")
+                print("\n🚀 EthniData v3.0.0 offers 14x more data (5.8M vs 415K records)!")
                 print(f"   Would you like to download it? ({DATABASES['v3.0.0']['size']})")
                 response = input("   Download v3.0.0? [y/N]: ").strip().lower()
 

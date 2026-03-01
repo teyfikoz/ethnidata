@@ -1,7 +1,7 @@
 .PHONY: help install install-dev fetch-data build-db clean test lint format
 
 help:
-	@echo "NBD Database - Makefile Commands"
+	@echo "EthniData - Makefile Commands"
 	@echo ""
 	@echo "  make install       - Install package"
 	@echo "  make install-dev   - Install with dev dependencies"
@@ -31,15 +31,13 @@ build-db:
 	cd scripts && python 6_create_database.py
 
 test:
-	pytest tests/ -v --cov=nbd --cov-report=html
+	pytest tests/ -v --cov=ethnidata --cov-report=html
 
 lint:
-	flake8 nbd/ tests/ --max-line-length=120
-	pylint nbd/
+	ruff check ethnidata/ tests/
 
 format:
-	black nbd/ tests/ scripts/
-	isort nbd/ tests/ scripts/
+	ruff format ethnidata/ tests/ scripts/
 
 clean:
 	rm -rf build/ dist/ *.egg-info

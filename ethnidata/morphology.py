@@ -7,7 +7,7 @@ Detects cultural/linguistic patterns in names (suffixes, prefixes, etc.)
 License: MIT
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 import re
 
 

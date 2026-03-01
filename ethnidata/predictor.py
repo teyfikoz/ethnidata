@@ -12,13 +12,13 @@ Yeni özellikler:
 
 import sqlite3
 from pathlib import Path
-from typing import Dict, List, Optional, Literal
+from typing import Dict, Optional, Literal
 from unidecode import unidecode
 import pycountry
 
 # v4.0.0 new modules
 from .explainability import ExplainabilityEngine
-from .morphology import MorphologyEngine, NameFeatureExtractor
+from .morphology import MorphologyEngine
 
 class EthniData:
     """Ethnicity, Nationality, Gender, Region and Language predictor"""
@@ -41,10 +41,10 @@ class EthniData:
                 if v3_path.exists():
                     db_path = v3_path
                 else:
-                    print(f"\n💡 EthniData v3.0.0 (5.8M records) is not installed.")
-                    print(f"   To download: from ethnidata.downloader import download_v3_database")
-                    print(f"   download_v3_database()")
-                    print(f"\n   Using v2.0.0 (415K records) for now...")
+                    print("\n💡 EthniData v3.0.0 (5.8M records) is not installed.")
+                    print("   To download: from ethnidata.downloader import download_v3_database")
+                    print("   download_v3_database()")
+                    print("\n   Using v2.0.0 (415K records) for now...")
                     db_path = package_dir / "ethnidata.db"
             else:
                 db_path = package_dir / "ethnidata.db"
@@ -163,7 +163,7 @@ class EthniData:
             try:
                 country = pycountry.countries.get(alpha_3=row['country_code'])
                 country_name = country.name if country else row['country_code']
-            except:
+            except Exception:
                 country_name = row['country_code']
 
             top_countries.append({
@@ -245,7 +245,7 @@ class EthniData:
                         confidence = 0.65
                         morphology_boost_applied = True
                         morphology_signal = 'Turkish'
-                    except:
+                    except Exception:
                         pass
 
             # Japanese boost logic
@@ -276,7 +276,7 @@ class EthniData:
                         confidence = 0.70
                         morphology_boost_applied = True
                         morphology_signal = 'Japanese'
-                    except:
+                    except Exception:
                         pass
 
             # Chinese boost logic
@@ -307,7 +307,7 @@ class EthniData:
                         confidence = 0.70
                         morphology_boost_applied = True
                         morphology_signal = 'Chinese'
-                    except:
+                    except Exception:
                         pass
 
         # Apply minimum confidence threshold
@@ -720,7 +720,7 @@ class EthniData:
             try:
                 country = pycountry.countries.get(alpha_3=country_code)
                 country_name = country.name if country else country_code
-            except:
+            except Exception:
                 country_name = country_code
 
             top_countries.append({

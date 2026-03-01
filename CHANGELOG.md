@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.4.0] - 2026-03-01
+
+### Added
+- GitHub Actions CI pipeline (lint + tests across Python 3.10-3.13).
+- Docker support (Dockerfile, docker-compose.yml, .dockerignore).
+- PEP 561 `py.typed` marker for type checker support.
+
+### Fixed
+- **religious.py**: Case-sensitivity bug in `infer_religion()` — lookups now use title-case matching.
+- **kaggle.py**: Syntax error in `load_indian_names_mock()` — fixed invalid walrus operator unpacking.
+- **predictor.py**: Replaced 5 bare `except:` with `except Exception:` for proper error handling.
+- Author email updated from placeholder to real address.
+- Makefile references updated from old "nbd" package name to "ethnidata".
+
+### Removed
+- Deleted `predictor_old.py` (dead code with outdated schema).
+
+---
+
 ## [4.1.1] - 2025-12-23
 
 ### 🐛 BUG FIXES: Morphology Pattern Detection

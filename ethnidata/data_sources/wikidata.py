@@ -7,11 +7,9 @@ Query Wikidata for:
 - Frequency data from Wikipedia categories
 """
 
-import json
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
-from urllib.parse import quote
 import requests
 
 
@@ -175,7 +173,7 @@ class WikidataNameExtractor:
                 )
 
                 persons.append(person)
-            except Exception as e:
+            except Exception:
                 continue  # Skip malformed entries
 
         return persons

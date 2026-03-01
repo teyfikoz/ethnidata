@@ -14,7 +14,7 @@ Support for:
 
 import csv
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 from urllib.request import urlretrieve
 import tempfile
@@ -79,12 +79,12 @@ class CensusDataLoader:
         zip_path = os.path.join(self.cache_dir, "us_census_surnames.zip")
 
         if not os.path.exists(zip_path) or force_download:
-            print(f"📥 Downloading US Census surname data...")
+            print("📥 Downloading US Census surname data...")
             urlretrieve(self.US_SURNAMES_URL, zip_path)
 
         records = []
 
-        print(f"📖 Loading US Census surnames...")
+        print("📖 Loading US Census surnames...")
 
         with zipfile.ZipFile(zip_path, 'r') as zf:
             # File is Names_2010Census.csv
@@ -217,13 +217,13 @@ if __name__ == "__main__":
 
     # Load US surnames
     us_surnames = loader.load_us_surnames(min_frequency=1000)
-    print(f"\n📊 Top 20 US Surnames:")
+    print("\n📊 Top 20 US Surnames:")
     for record in us_surnames[:20]:
         print(f"   {record.rank:3d}. {record.name:20s} {record.frequency:,}")
 
     # Mock UK names
     uk_names = loader.load_uk_baby_names_mock()
-    print(f"\n📊 Top UK Baby Names (2023 - Mock Data):")
+    print("\n📊 Top UK Baby Names (2023 - Mock Data):")
     for record in uk_names:
         print(f"   {record.rank}. {record.name} ({record.gender}): {record.frequency:,}")
 

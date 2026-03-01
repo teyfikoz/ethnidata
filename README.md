@@ -1,12 +1,23 @@
 # EthniData - State-of-the-Art Name Analysis Engine
 
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/ethnidata.svg)](https://badge.fury.io/py/ethnidata)
 
 Predict **nationality**, **ethnicity**, **religion**, and **demographics** from names using a comprehensive global database built from multiple authoritative sources.
 
-## 🆕 What's New in v4.0.2 (Aralık 2024)
+## 🆕 What's New in v4.4.0 (March 2026)
+
+**Bug Fixes & CI/CD**:
+- CI pipeline (GitHub Actions: lint + tests Python 3.10-3.13)
+- Docker support (Dockerfile, docker-compose.yml)
+- Fixed case-sensitivity bug in religion inference
+- Fixed syntax error in Kaggle Indian names mock data
+- Fixed bare except statements in predictor
+- Removed dead code (`predictor_old.py`)
+- PEP 561 `py.typed` marker
+
+## What's New in v4.0.2 (Aralık 2024)
 
 **CRITICAL BUG FIX - Production Readiness**:
 - ✅ **Enhanced Confidence Calculation**: Multi-factor scoring fixes 0% regression test pass rate

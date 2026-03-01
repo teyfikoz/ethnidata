@@ -72,8 +72,7 @@ def test_get_stats(nbd):
 
     assert 'total_first_names' in stats
     assert 'total_last_names' in stats
-    assert 'countries_first' in stats
-    assert 'countries_last' in stats
+    assert 'countries' in stats
 
     assert stats['total_first_names'] >= 0
     assert stats['total_last_names'] >= 0

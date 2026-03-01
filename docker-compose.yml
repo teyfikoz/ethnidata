@@ -1,0 +1,9 @@
+services:
+  ethnidata:
+    build: .
+    container_name: ethnidata
+    volumes:
+      - ethnidata-cache:/root/.ethnidata
+
+volumes:
+  ethnidata-cache:
