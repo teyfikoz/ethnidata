@@ -10,16 +10,25 @@ Tests for:
 """
 
 import pytest
+
+# These always work (no extra deps)
 from ethnidata.data_sources import (
-    WikidataNameExtractor,
-    SSABabyNamesLoader,
-    CensusDataLoader,
     KaggleNamesIntegration,
     ReligiousNamesDatabase,
 )
 from ethnidata.data_sources.religious import Religion
+from ethnidata.data_sources.ssa_names import SSABabyNamesLoader
+from ethnidata.data_sources.census import CensusDataLoader
+
+# Wikidata needs 'requests'
+try:
+    from ethnidata.data_sources.wikidata import WikidataNameExtractor
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 
 
+@pytest.mark.skipif(not HAS_REQUESTS, reason="requests not installed")
 class TestWikidataExtractor:
     """Test WikidataNameExtractor."""
 
@@ -278,6 +287,7 @@ class TestReligiousNames:
 
 
 # Integration tests
+@pytest.mark.skipif(not HAS_REQUESTS, reason="requests not installed")
 class TestDataSourcesIntegration:
     """Integration tests for all data sources."""
 

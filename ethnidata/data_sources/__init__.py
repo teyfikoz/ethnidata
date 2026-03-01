@@ -1,5 +1,5 @@
 """
-EthniData External Data Sources v4.1.0
+EthniData External Data Sources v4.4.0
 
 Integrations for:
 - Wikidata/Wikipedia SPARQL queries
@@ -9,16 +9,29 @@ Integrations for:
 - Religious affiliation databases
 """
 
-from .wikidata import WikidataNameExtractor
-from .ssa_names import SSABabyNamesLoader
-from .census import CensusDataLoader
 from .kaggle import KaggleNamesIntegration
 from .religious import ReligiousNamesDatabase
 
 __all__ = [
-    "WikidataNameExtractor",
-    "SSABabyNamesLoader",
-    "CensusDataLoader",
     "KaggleNamesIntegration",
     "ReligiousNamesDatabase",
 ]
+
+# Optional imports (require extra dependencies)
+try:
+    from .wikidata import WikidataNameExtractor  # noqa: F401
+    __all__.append("WikidataNameExtractor")
+except ImportError:
+    pass
+
+try:
+    from .ssa_names import SSABabyNamesLoader  # noqa: F401
+    __all__.append("SSABabyNamesLoader")
+except ImportError:
+    pass
+
+try:
+    from .census import CensusDataLoader  # noqa: F401
+    __all__.append("CensusDataLoader")
+except ImportError:
+    pass
