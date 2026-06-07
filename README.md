@@ -3,6 +3,7 @@
 **State-of-the-art name analysis engine** — predict nationality, ethnicity, gender, language, religion, and region from first/last names. 5.9M+ records, 238 countries, explainable AI, morphology detection, and synthetic data generation.
 
 [![PyPI version](https://badge.fury.io/py/ethnidata.svg)](https://pypi.org/project/ethnidata/)
+[![Build](https://github.com/teyfikoz/ethnidata/actions/workflows/publish.yml/badge.svg)](https://github.com/teyfikoz/ethnidata/actions/workflows/publish.yml)
 [![CI](https://github.com/teyfikoz/ethnidata/actions/workflows/ci.yml/badge.svg)](https://github.com/teyfikoz/ethnidata/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

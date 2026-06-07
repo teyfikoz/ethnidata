@@ -1,0 +1,13 @@
+[run]
+source = ethnidata
+omit =
+    ethnidata/downloader.py
+    ethnidata/data_sources/wikidata.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    @abstractmethod
